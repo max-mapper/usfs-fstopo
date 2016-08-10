@@ -1,5 +1,5 @@
 {
-  "name": "fstopo",
+  "name": "usfs-fstopo",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -16,9 +16,10 @@
     "url": "https://github.com/maxogden/usfs-fstopo/issues"
   },
   "homepage": "https://github.com/maxogden/usfs-fstopo#readme",
-  "description": "",
+  "description": "Scrapes all the FSTopo topographic forest PDF maps from [the U.S. Forest Service FSTopo website](http://data.fs.usda.gov/geodata/rastergateway/states-regions/states.php).",
   "dependencies": {
     "run-series": "^1.1.4",
     "electron-prebuilt": "0.36.7"
-  }
+  },
+  "devDependencies": {}
 }
