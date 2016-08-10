@@ -1,0 +1,24 @@
+{
+  "name": "fstopo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maxogden/usfs-fstopo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/maxogden/usfs-fstopo/issues"
+  },
+  "homepage": "https://github.com/maxogden/usfs-fstopo#readme",
+  "description": "",
+  "dependencies": {
+    "run-series": "^1.1.4",
+    "electron-prebuilt": "0.36.7"
+  }
+}
