@@ -8,86 +8,58 @@ app.on('ready', function () {
     win = null
   })
   
-  win.loadURL('http://data.fs.usda.gov/geodata/rastergateway/states-regions/states.php')
+  console.error('loading initial page...')
+  win.loadURL('https://data.fs.usda.gov/geodata/rastergateway/states-regions/quad-index.php')
 
   win.webContents.on('dom-ready', function () {
     win.webContents.executeJavaScript(`
-      var rows = document.querySelectorAll('.fcTable tr')
-      var states = []
+      var rows = document.querySelectorAll('#skipheader tbody td a')
+      var ids = []
       Array.prototype.slice.call(rows).forEach(function (r) {
-        var state = r.querySelector('td a')
-        if (!state) return
-        var stateID = state.getAttribute('href').split('stateID=')[1]
-        if (!stateID) return
-        states.push(stateID)
+        ids.push(r.getAttribute('href'))
       })
       
       var ipc = require('electron').ipcRenderer
-      ipc.send('states', states)
+      ipc.send('ids', ids)
     `)
   })
   
-  electron.ipcMain.once('states', function (event, states) {
-    var stateSeries = []
-    states.forEach(function (state) {
-      stateSeries.push(function (cb) {
-        getGrids(state, function (err, grids) {
+  electron.ipcMain.once('ids', function (event, ids) {
+    var idSeries = []
+    ids.forEach(function (id) {
+      idSeries.push(function (cb) {
+        getPDFs(id, function (err, pdfs) {
           if (err) throw err
-          var gridSeries = []
-          grids.forEach(function (grid) {
-            gridSeries.push(function (cb) {
-              getPDFs(state, grid, cb)
-            })
+          pdfs.pdfs.forEach(function (pdf) {
+            console.log(JSON.stringify(pdf))
           })
-          runSeries(gridSeries, cb)
+          cb(null)
         })
       })
     })
-    runSeries(stateSeries, function (err, results) {
-      var flattened = []
-      results.forEach(function (r) { flattened = flattened.concat(r) })
-      console.log(JSON.stringify(results, null, '  '))
+    runSeries(idSeries, function (err) {
       win.close()
     })
   })
   
-  function getGrids (state, cb) {
-    win.loadURL('http://data.fs.usda.gov/geodata/rastergateway/states-regions/states_zoom.php?stateID=' + state)
-
-    win.webContents.on('dom-ready', function () {
-      win.webContents.executeJavaScript(`
-        var areas = document.querySelectorAll('area[shape="POLY"]')
-        var grids = []
-        Array.prototype.slice.call(areas).forEach(function (area) {
-          grids.push({href: area.getAttribute('href'), title: area.getAttribute('title')})
-        })
-        var ipc = require('electron').ipcRenderer
-        ipc.send('${state}', grids)
-      `)
-    })
-    electron.ipcMain.once(state, function (event, grids) {
-      cb(null, grids)
-    })
-  }
-  
-  function getPDFs (state, grid, cb) {
-    console.log('Getting PDF URLs', state, grid.href)
-    win.loadURL('http://data.fs.usda.gov/geodata/rastergateway/states-regions/' + grid.href)
+  function getPDFs (id, cb) {
+    console.error('Getting PDF URLs', id)
+    win.loadURL('https://data.fs.usda.gov/geodata/rastergateway/states-regions/' + id)
 
     win.webContents.on('dom-ready', function () {
       win.webContents.executeJavaScript(`
         var path = require('path')
-        var links = document.querySelectorAll('#listPDF .tabLink')
+        var links = document.querySelectorAll('#skipheader ul a')
         var pdfs = []
         Array.prototype.slice.call(links).forEach(function (link) {
           pdfs.push('http://data.fs.usda.gov/geodata/rastergateway' + link.getAttribute('href').slice(2))
         })
         var ipc = require('electron').ipcRenderer
-        ipc.send('${state}-${grid.title}', pdfs)
+        ipc.send('${id}', pdfs)
       `)
     })
-    electron.ipcMain.once(state + '-' + grid.title, function (event, pdfs) {
-      cb(null, {state: state, grid: grid.title, pdfs: pdfs})
+    electron.ipcMain.once(id, function (event, pdfs) {
+      cb(null, {pdfs: pdfs})
     })
   }
 })
